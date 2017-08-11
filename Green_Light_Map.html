@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title></title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.37.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.37.0/mapbox-gl.css' rel='stylesheet' />
+    <style>
+       body { margin:0; padding:0; }
+        h2 {
+            margin: 10px;
+            font-size: 20px;
+            text-align: center;
+        }
+
+        h3 {
+            font-size: 1em;
+        }
+
+        p {
+            font-size: 0.85em;
+            margin: 10px;
+            text-align: left;
+        }
+
+    h1 {
+            text-align: center;
+        }
+
+        .map-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            background: rgba(255, 255, 255, 0.8);
+            margin-left: 30px;
+            font-family: Arial, sans-serif;
+            overflow: auto;
+            border-radius: 3px;
+        }
+        #map {
+            position:absolute;
+            top:0;
+            bottom:0;
+            width:100%;
+        }
+        #features {
+            top: 0;
+            height: 400px;
+            margin-top: 20px;
+            width: 300px;
+        }
+        /*#legend {
+            padding: 10px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.10);
+            line-height: 18px;
+            height: 150px;
+            margin-bottom: 40px;
+            width: 100px;
+        }
+        .legend-key {
+            display:inline-block;
+            border-radius: 20%;
+            width: 10px;
+            height: 10px;
+            margin-right: 5px;
+        }*/
+        
+    </style>
+</head>
+<body>
+<script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.1.0/mapbox-gl-geocoder.min.js'></script>
+<link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.1.0/mapbox-gl-geocoder.css' type='text/css' />
+<style>
+#geocoder-container > div {
+    min-width:50%;
+    margin-left:25%;
+}
+</style>
+<div id='map'></div>
+<div class='map-overlay' id='features'><h2>Green Light Locations</h2><div id='pd'><p>Here is the text about stuff, check it out. Here is some more stuff, check it out agian.</p></div></div>
+<!-- <div class='map-overlay' id='legend'></div> -->
+
+
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoiZnJvbW8iLCJhIjoiY2lxeWN1dDk4MDF0Y2Zza3FlOW03aG93ayJ9.vN4_HcG9if1Jb5-lm5K7Sw';
+var map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/fromo/cj5xydi2w0q0o2rpcrqs41ffp',
+    zoom: 11,
+    center: [-83.082733, 42.370891],
+      bearing: -1.25,
+          minZoom: 11,
+          maxBounds: [
+              [-83.611, 42.100],
+              [-82.511, 42.600]
+          ]
+});
+
+var geocoder = new MapboxGeocoder({
+    accessToken: mapboxgl.accessToken
+});
+
+map.addControl(geocoder);
+
+// After the map style has loaded on the page, add a source layer and default
+// styling for a single point.
+map.on('load', function() {
+    map.addSource('single-point', {
+        "type": "geojson",
+        "data": {
+            "type": "FeatureCollection",
+            "features": []
+        }
+    });
+
+    map.addLayer({
+        "id": "point",
+        "source": "single-point",
+        "type": "circle",
+        "paint": {
+            "circle-radius": 10,
+            "circle-color": "#007cbf"
+        }
+    });
+
+    // Listen for the `geocoder.input` event that is triggered when a user
+    // makes a selection and add a symbol that matches the result.
+    geocoder.on('result', function(ev) {
+        map.getSource('single-point').setData(ev.result.geometry);
+    })});
+
+map.on('click', function(e) {
+  var features = map.queryRenderedFeatures(e.point, {
+    layers: ['Green_Light'] // replace this with the name of the layer
+  });
+
+  if (!features.length) {
+    return;
+  }
+
+  var feature = features[0];
+
+  var popup = new mapboxgl.Popup({ offset: [0, -15] })
+    .setLngLat(feature.geometry.coordinates)
+    .setHTML('<h1>' + feature.properties.Address + '</h1>'  + '<hr>' + '</hr>' + '<h2>' + 'Business: ' + feature.properties.Bus_Name + '</h2>' + '</h3><img src="' + feature.properties.Image_Url +  '" height="300px"/>' + '<h2>' + 'Address: ' + feature.properties.Address + '</h2>' )
+    .setLngLat(feature.geometry.coordinates)
+    .addTo(map);
+});
+
+map.dragRotate.disable();
+
+ map.on('mouseenter', 'Green_Light', function () {
+        map.getCanvas().style.cursor = 'pointer';
+    });
+
+    // Change it back to a pointer when it leaves.
+    map.on('mouseleave', 'Green_Light', function () {
+        map.getCanvas().style.cursor = '';
+    });
+
+// disable map rotation using touch rotation gesture
+map.touchZoomRotate.disableRotation();
+map.addControl(new mapboxgl.NavigationControl());
+
+</script>
+
+
+</body>
+</html>
